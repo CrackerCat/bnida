@@ -4,6 +4,7 @@ __author__      = "zznop"
 __copyright__   = "Copyright 2018, zznop0x90@gmail.com"
 __license__     = "WTFPL"
 
+import idaapi
 import idc
 import idautils
 import json
@@ -78,10 +79,26 @@ def get_comments():
 
     return comments
 
+def get_file_metadata():
+    """Get info on the loaded binary
+    """
+    metadata = {}
+    metadata["filepath"] = idaapi.get_input_file_path()
+
+    # get MD5 of binary
+    ua = idaapi.uchar_array(16)
+    if idaapi.retrieve_input_file_md5(ua.cast()):
+        metadata["md5"] = "".join(["%02X" % ua[i] for i in xrange(16)])
+    else:
+        metadata["md5"] = ""
+
+    return metadata
+
 def main(json_file):
     """Construct a json file containing analysis data from an IDA database
     """
     json_array = {}
+    json_array["metadata"] = get_file_metadata()
     json_array["sections"] = get_sections()
     json_array["comments"] = get_comments()
     json_array["symbols"]  = get_symbols()
